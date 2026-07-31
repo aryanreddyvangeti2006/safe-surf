@@ -13,17 +13,21 @@ def analyze_dns(hostname: str) -> Dict[str, Any]:
     flags: List[str] = []
     score_impact = 0
 
-    resolver = dns.resolver.Resolver()
-    resolver.timeout = 3.0
-    resolver.lifetime = 3.0
+    try:
+        resolver = dns.resolver.Resolver()
+        resolver.timeout = 3.0
+        resolver.lifetime = 3.0
+    except Exception:
+        resolver = None
 
-    for r_type in ["A", "AAAA", "MX", "TXT", "NS", "CNAME"]:
-        try:
-            answers = resolver.resolve(hostname, r_type)
-            for rdata in answers:
-                records[r_type].append(str(rdata))
-        except Exception:
-            pass
+    if resolver:
+        for r_type in ["A", "AAAA", "MX", "TXT", "NS", "CNAME"]:
+            try:
+                answers = resolver.resolve(hostname, r_type)
+                for rdata in answers:
+                    records[r_type].append(str(rdata))
+            except Exception:
+                pass
 
     if not records["A"] and not records["AAAA"] and not records["CNAME"]:
         flags.append("No IP address (A/AAAA) records found for domain")
